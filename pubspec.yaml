@@ -33,6 +33,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   audioplayers: ^6.1.0
   provider: ^6.1.2
+  just_audio: ^0.9.36
 
 dev_dependencies:
   flutter_test:
@@ -56,7 +57,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sounds/elles.mp3
-    - assets/sounds/vowel1.mp3
-    - assets/images/keys.jpg
-    - assets/sounds/kumgibi3310.mp3
+    - assets/audio/vowels/

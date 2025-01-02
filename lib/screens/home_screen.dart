@@ -4,44 +4,103 @@ import '../widgets/current_exercise_widget.dart';
 
 import '../widgets/play_button_widget.dart';
 import '../widgets/microphone_widget.dart';
+import '../models/exercise_type.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  final Exercise exercise;
+
+  const HomeScreen({
+    Key? key,
+    required this.exercise,
+  }) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int currentStepIndex = 0;
+
+  void nextStep() {
+    if (currentStepIndex < widget.exercise.steps.length - 1) {
+      setState(() {
+        currentStepIndex++;
+      });
+    }
+  }
+
+  void previousStep() {
+    if (currentStepIndex > 0) {
+      setState(() {
+        currentStepIndex--;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentStep = widget.exercise.steps[currentStepIndex];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Luscinia - Ses Egzersizi'),
+        title: Text(widget.exercise.name),
       ),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: Column(
           children: [
-            // Scrollbar widget
             Expanded(
               flex: 1,
-              child: ProgressbarWidget(),
+              child: ProgressbarWidget(
+                currentStep: currentStepIndex + 1,
+                totalSteps: widget.exercise.steps.length,
+              ),
             ),
-            SizedBox(height: 10),
-            // Seviye metni widget
+            const SizedBox(height: 10),
             Expanded(
               flex: 1,
               child: Center(
-                child: CurrentExerciseWidget(),
+                child: CurrentExerciseWidget(
+                  title: currentStep.title,
+                  description: currentStep.description,
+                ),
               ),
             ),
-            SizedBox(height: 20),
-            // Piyano widget
+            const SizedBox(height: 20),
             Expanded(
               flex: 4,
-              child: PlayButtonWidget(),
+              child: Column(
+                children: [
+                  PlayButtonWidget(
+                    audioPath: currentStep.audioPath,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: currentStepIndex > 0 ? previousStep : null,
+                      ),
+                      const SizedBox(width: 20),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward),
+                        onPressed:
+                            currentStepIndex < widget.exercise.steps.length - 1
+                                ? nextStep
+                                : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 10),
-            // Mikrofon ve ses dalgaları widget
+            const SizedBox(height: 10),
             Expanded(
               flex: 2,
               child: MicrophoneWidget(),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),
