@@ -57,4 +57,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/audio/vowels/
+    - assets/audio/kumgibi3310.mp3
+    - assets/audio/vowel/

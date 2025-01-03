@@ -28,6 +28,7 @@ class _PlayButtonWidgetState extends State<PlayButtonWidget> {
     try {
       debugPrint('Yüklenen ses dosyası: ${widget.audioPath}');
       await _audioPlayer.setAsset(widget.audioPath);
+      debugPrint('Ses dosyası başarıyla yüklendi');
       // Ses dosyası bittiğinde _isPlaying'i false yap
       _audioPlayer.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
