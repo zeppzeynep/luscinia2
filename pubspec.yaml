@@ -59,3 +59,4 @@ flutter:
   assets:
     - assets/audio/kumgibi3310.mp3
     - assets/audio/vowel/
+    - assets/images/logo.png

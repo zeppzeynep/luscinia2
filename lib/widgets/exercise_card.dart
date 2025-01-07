@@ -20,6 +20,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Theme.of(context).colorScheme.secondary,
       margin: const EdgeInsets.only(bottom: 16),
       child: ExpansionTile(
         title: Text(

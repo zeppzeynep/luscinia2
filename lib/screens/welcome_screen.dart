@@ -6,25 +6,74 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Luscinia',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo Container
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(100),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF19C79).withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo.png', // Logo dosyasının yolu
+                    width: 150,
+                    height: 150,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/exercise-list');
-              },
-              child: const Text('Başla'),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Text(
+                'Luscinia',
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                  shadows: [
+                    Shadow(
+                      color: const Color(0xFFF19C79).withOpacity(0.3),
+                      offset: const Offset(0, 3),
+                      blurRadius: 5,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Sesinizi Keşfedin',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 48),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/exercise-list');
+                },
+                child: const Text(
+                  'Başla',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

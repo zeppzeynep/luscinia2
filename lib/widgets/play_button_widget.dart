@@ -71,7 +71,7 @@ class _PlayButtonWidgetState extends State<PlayButtonWidget> {
     return IconButton(
       icon: Icon(
         _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        color: Colors.blue,
+        color: Theme.of(context).colorScheme.primary,
       ),
       iconSize: 64,
       onPressed: _togglePlay,

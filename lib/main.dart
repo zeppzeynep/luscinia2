@@ -15,12 +15,28 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Luscinia',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        primaryColor: const Color(0xFFF19C79),
+        colorScheme: ColorScheme.light(
+          primary: const Color(0xFFF19C79),
+          secondary: const Color(0xFFCEE5D0),
+          tertiary: const Color(0xFFFFF5E1),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFF19C79),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF19C79),
+          elevation: 0,
+        ),
       ),
-      // Başlangıç ekranı olarak WelcomeScreen'i göster
       home: const WelcomeScreen(),
-      // Route'ları tanımla
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
         '/exercise-list': (context) => const ExerciseListScreen(),

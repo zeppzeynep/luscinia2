@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentStep = widget.exercise.steps[currentStepIndex];
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
       appBar: AppBar(
         title: Text(widget.exercise.name),
       ),
