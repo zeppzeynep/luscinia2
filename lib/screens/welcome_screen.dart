@@ -12,7 +12,7 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Container
+              // Logo Container5
               Container(
                 width: 200,
                 height: 200,
