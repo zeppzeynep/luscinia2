@@ -1,18 +1,36 @@
+buildscript {
+    ext.kotlin_version = '1.9.0'  // Mevcut varsa değiştirmeyin
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://mvn.0110.be/releases"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'  // Mevcut sürümünüzü koruyun
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url "https://mvn.0110.be/releases"
+        }
     }
 }
 
 rootProject.buildDir = "../build"
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
