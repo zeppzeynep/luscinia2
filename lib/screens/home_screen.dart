@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/progressbar_widget.dart';
 import '../widgets/current_exercise_widget.dart';
-
 import '../widgets/play_button_widget.dart';
 import '../widgets/microphone_widget.dart';
 import '../models/exercise_type.dart';
@@ -40,16 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentStep = widget.exercise.steps[currentStepIndex];
-
+    
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.tertiary,
       appBar: AppBar(
         title: Text(widget.exercise.name),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(30.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
           children: [
+            // Progress bar
             Expanded(
               flex: 1,
               child: ProgressbarWidget(
@@ -57,7 +57,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 totalSteps: widget.exercise.steps.length,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
+            
+            // Current exercise info
             Expanded(
               flex: 1,
               child: Center(
@@ -67,15 +69,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+            
+            // Play button ve navigation
             Expanded(
-              flex: 4,
+              flex: 2,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   PlayButtonWidget(
                     audioPath: currentStep.audioPath,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -86,22 +91,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 20),
                       IconButton(
                         icon: const Icon(Icons.arrow_forward),
-                        onPressed:
-                            currentStepIndex < widget.exercise.steps.length - 1
-                                ? nextStep
-                                : null,
+                        onPressed: currentStepIndex < widget.exercise.steps.length - 1
+                            ? nextStep
+                            : null,
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            
+            // Microphone widget - daha fazla alan
             Expanded(
-              flex: 2,
+              flex: 4,
               child: MicrophoneWidget(),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/services.dart';
 
 /// Pitch detection algoritmaları
@@ -177,3 +178,4 @@ class PitchDetectionException implements Exception {
   @override
   String toString() => 'PitchDetectionException: $message (code: $code)';
 }
+

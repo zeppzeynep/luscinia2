@@ -2,28 +2,33 @@ package com.example.luscinia
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.AudioEvent
-import be.tarsos.dsp.io.android.AudioDispatcherFactory
 import be.tarsos.dsp.pitch.PitchDetectionHandler
 import be.tarsos.dsp.pitch.PitchDetectionResult
 import be.tarsos.dsp.pitch.PitchProcessor
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm
+import be.tarsos.dsp.io.TarsosDSPAudioFormat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import kotlin.concurrent.thread
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.luscinia/pitch_detector"
     private val EVENT_CHANNEL = "com.example.luscinia/pitch_stream"
     private val PERMISSION_REQUEST_CODE = 200
     
-    private var audioDispatcher: AudioDispatcher? = null
+    private var audioRecord: AudioRecord? = null
+    private var isRecording = false
+    private var recordingThread: Thread? = null
     private var pitchStreamSink: EventChannel.EventSink? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     
@@ -74,7 +79,7 @@ class MainActivity: FlutterActivity() {
     }
     
     private fun startPitchDetection(algorithmName: String, sampleRate: Int, bufferSize: Int) {
-        // Önceki dispatcher'ı durdur
+        // Önceki kaydı durdur
         stopPitchDetection()
         
         try {
@@ -88,21 +93,43 @@ class MainActivity: FlutterActivity() {
                 else -> PitchEstimationAlgorithm.YIN
             }
             
-            // AudioDispatcher oluştur
-            audioDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(sampleRate, bufferSize, 0)
+            // AudioRecord setup
+            val minBufferSize = AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            )
+            
+            val audioBufferSize = maxOf(minBufferSize, bufferSize * 2)
+            
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.RECORD_AUDIO
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+            
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                audioBufferSize
+            )
             
             // PitchDetectionHandler tanımla
             val pitchDetectionHandler = PitchDetectionHandler { result: PitchDetectionResult, event: AudioEvent ->
                 val pitchInHz = result.pitch
                 val probability = result.probability
-                val isSilence = result.isPitched
+                val isPitched = result.isPitched
                 
                 // Pitch verisini Flutter'a gönder
-                if (pitchStreamSink != null) {
+                if (pitchStreamSink != null && isPitched) {
                     val pitchData = hashMapOf(
                         "pitch" to pitchInHz.toDouble(),
                         "probability" to probability.toDouble(),
-                        "isPitched" to isSilence,
+                        "isPitched" to isPitched,
                         "timestamp" to System.currentTimeMillis()
                     )
                     
@@ -113,14 +140,47 @@ class MainActivity: FlutterActivity() {
                 }
             }
             
-            // PitchProcessor ekle
-            val pitchProcessor = PitchProcessor(algorithm, sampleRate.toFloat(), bufferSize, pitchDetectionHandler)
-            audioDispatcher?.addAudioProcessor(pitchProcessor)
+            // PitchProcessor oluştur
+            val tarsosDSPFormat = TarsosDSPAudioFormat(
+                sampleRate.toFloat(),
+                16,
+                1,
+                true,
+                false
+            )
             
-            // Arka planda çalıştır
-            Thread {
-                audioDispatcher?.run()
-            }.start()
+            val pitchProcessor = PitchProcessor(
+                algorithm,
+                sampleRate.toFloat(),
+                bufferSize,
+                pitchDetectionHandler
+            )
+            
+            // AudioRecord'dan okuma thread'i
+            isRecording = true
+            audioRecord?.startRecording()
+            
+            recordingThread = thread(start = true) {
+                val audioBuffer = ShortArray(bufferSize)
+                val floatBuffer = FloatArray(bufferSize)
+                
+                while (isRecording) {
+                    val read = audioRecord?.read(audioBuffer, 0, bufferSize) ?: 0
+                    
+                    if (read > 0) {
+                        // Short'tan Float'a çevir
+                        for (i in 0 until read) {
+                            floatBuffer[i] = audioBuffer[i] / 32768.0f
+                        }
+                        
+                        // AudioEvent oluştur ve process et
+                        val audioEvent = AudioEvent(tarsosDSPFormat)
+                        audioEvent.floatBuffer = floatBuffer
+                        
+                        pitchProcessor.process(audioEvent)
+                    }
+                }
+            }
             
         } catch (e: Exception) {
             mainHandler.post {
@@ -130,8 +190,13 @@ class MainActivity: FlutterActivity() {
     }
     
     private fun stopPitchDetection() {
-        audioDispatcher?.stop()
-        audioDispatcher = null
+        isRecording = false
+        recordingThread?.join(1000)
+        recordingThread = null
+        
+        audioRecord?.stop()
+        audioRecord?.release()
+        audioRecord = null
     }
     
     private fun checkPermission(): Boolean {
