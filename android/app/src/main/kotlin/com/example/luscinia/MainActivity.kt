@@ -100,7 +100,16 @@ class MainActivity: FlutterActivity() {
                 AudioFormat.ENCODING_PCM_16BIT
             )
             
+            if (minBufferSize == AudioRecord.ERROR || minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
+                mainHandler.post {
+                    pitchStreamSink?.error("AUDIO_SETUP_ERROR", "AudioRecord.getMinBufferSize failed", null)
+                }
+                return
+            }
+            
             val audioBufferSize = maxOf(minBufferSize, bufferSize * 2)
+            
+            android.util.Log.d("PitchDetection", "Sample rate: $sampleRate, Buffer size: $bufferSize, Audio buffer: $audioBufferSize")
             
             if (ActivityCompat.checkSelfPermission(
                     this,
@@ -118,14 +127,29 @@ class MainActivity: FlutterActivity() {
                 audioBufferSize
             )
             
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                mainHandler.post {
+                    pitchStreamSink?.error("AUDIO_INIT_ERROR", "AudioRecord not initialized", null)
+                }
+                audioRecord?.release()
+                audioRecord = null
+                return
+            }
+            
+            android.util.Log.d("PitchDetection", "AudioRecord initialized successfully")
+            
             // PitchDetectionHandler tanımla
             val pitchDetectionHandler = PitchDetectionHandler { result: PitchDetectionResult, event: AudioEvent ->
                 val pitchInHz = result.pitch
                 val probability = result.probability
                 val isPitched = result.isPitched
+                val rms = event.rms * 100
+                
+                android.util.Log.d("PitchDetection", "Pitch: $pitchInHz Hz, Probability: $probability, IsPitched: $isPitched, RMS: %.5f".format(rms))
                 
                 // Pitch verisini Flutter'a gönder
-                if (pitchStreamSink != null && isPitched) {
+                // Filtrele: -1.0 (pitch yok), 150 Hz altı (gürültü/elektriksel hum), 0.85 altındaki confidence
+                if (pitchStreamSink != null && isPitched && pitchInHz >= 150.0 && probability >= 0.85) {
                     val pitchData = hashMapOf(
                         "pitch" to pitchInHz.toDouble(),
                         "probability" to probability.toDouble(),
@@ -160,17 +184,40 @@ class MainActivity: FlutterActivity() {
             isRecording = true
             audioRecord?.startRecording()
             
+            if (audioRecord?.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+                mainHandler.post {
+                    pitchStreamSink?.error("RECORDING_ERROR", "Failed to start recording", null)
+                }
+                return
+            }
+            
+            android.util.Log.d("PitchDetection", "Recording started")
+            
             recordingThread = thread(start = true) {
                 val audioBuffer = ShortArray(bufferSize)
                 val floatBuffer = FloatArray(bufferSize)
+                var readCount = 0
                 
                 while (isRecording) {
                     val read = audioRecord?.read(audioBuffer, 0, bufferSize) ?: 0
                     
                     if (read > 0) {
+                        readCount++
+                        
                         // Short'tan Float'a çevir
                         for (i in 0 until read) {
                             floatBuffer[i] = audioBuffer[i] / 32768.0f
+                        }
+                        
+                        // RMS (Root Mean Square) hesapla - ses seviyesi
+                        var sum = 0.0
+                        for (i in 0 until read) {
+                            sum += floatBuffer[i] * floatBuffer[i]
+                        }
+                        val rms = kotlin.math.sqrt(sum / read) * 100
+                        
+                        if (readCount % 50 == 0) {
+                            android.util.Log.d("PitchDetection", "Read $read samples (buffer #$readCount), RMS: %.5f".format(rms))
                         }
                         
                         // AudioEvent oluştur ve process et
@@ -178,6 +225,8 @@ class MainActivity: FlutterActivity() {
                         audioEvent.floatBuffer = floatBuffer
                         
                         pitchProcessor.process(audioEvent)
+                    } else {
+                        android.util.Log.e("PitchDetection", "AudioRecord.read returned: $read")
                     }
                 }
             }

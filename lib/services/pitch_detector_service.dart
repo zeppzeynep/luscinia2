@@ -39,29 +39,29 @@ class PitchData {
 
   /// Frekansı nota ismine çevirir (örn: 440Hz -> A4)
   String get noteName {
-    if (pitch <= 0) return 'N/A';
+    if (pitch <= 0 || pitch.isNaN || pitch.isInfinite) return 'N/A';
     
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     
     // A4 = 440 Hz referans
-    final noteNumber = 12 * (logBase(pitch / 440.0, 2)) + 49;
+    // MIDI note number = 69 + 12 * log2(freq/440)
+    final noteNumber = 69 + 12 * (log(pitch / 440.0) / ln2);
     final octave = ((noteNumber / 12) - 1).floor();
-    final note = noteNames[noteNumber.round() % 12];
+    final noteIndex = noteNumber.round() % 12;
+    final note = noteNames[noteIndex];
     
     return '$note$octave';
   }
 
   /// Frekansın notaya ne kadar yakın olduğunu cent cinsinden hesaplar
   double get centsOffPitch {
-    if (pitch <= 0) return 0;
+    if (pitch <= 0 || pitch.isNaN || pitch.isInfinite) return 0;
     
-    final noteNumber = 12 * (logBase(pitch / 440.0, 2)) + 49;
+    // MIDI note number
+    final noteNumber = 69 + 12 * (log(pitch / 440.0) / ln2);
     final nearestNote = noteNumber.round();
     return 100 * (noteNumber - nearestNote);
   }
-
-  double logBase(num x, num base) => log(x) / log(base);
-  double log(num x) => x.toString().length.toDouble(); // Basit yaklaşım
 
   @override
   String toString() {
@@ -85,7 +85,9 @@ class PitchDetectorService {
   /// Pitch detection stream'i
   Stream<PitchData> get pitchStream {
     _pitchStream ??= _eventChannel.receiveBroadcastStream().map((data) {
-      return PitchData.fromMap(data as Map<dynamic, dynamic>);
+      final pitchData = PitchData.fromMap(data as Map<dynamic, dynamic>);
+      print('📊 Flutter received pitch: ${pitchData.pitch.toStringAsFixed(2)} Hz, probability: ${(pitchData.probability * 100).toStringAsFixed(1)}%');
+      return pitchData;
     });
     return _pitchStream!;
   }
@@ -97,7 +99,7 @@ class PitchDetectorService {
   /// [bufferSize] - Buffer boyutu (varsayılan: 1024)
   Future<void> start({
     PitchAlgorithm algorithm = PitchAlgorithm.yin,
-    int sampleRate = 22050,
+    int sampleRate = 44100,  // Desktop örneğiyle aynı
     int bufferSize = 1024,
   }) async {
     try {
