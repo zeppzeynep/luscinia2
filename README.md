@@ -40,12 +40,3 @@ The main goal of the app is to provide users with voice exercises and analyze th
 
 
 
-## ▶️ Getting Started
-
-To run this project locally:
-
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-flutter pub get
-flutter run
