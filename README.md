@@ -1,16 +1,51 @@
-# luscinia
+# 🎤 Voice Training App
 
-A new Flutter project.
+This project is a Flutter-based mobile application designed to help users improve their vocal skills through interactive exercises and real-time audio analysis.
 
-## Getting Started
+## 📌 About the Project
 
-This project is a starting point for a Flutter application.
+This application was developed as a personal project to explore mobile development with Flutter and audio processing concepts.
 
-A few resources to get you started if this is your first Flutter project:
+The main goal of the app is to provide users with voice exercises and analyze their pitch in real-time, helping them practice and improve their vocal control.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## ✨ Features
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- 🎶 Real-time pitch detection
+- 📊 Visual feedback for voice analysis
+- 🎤 Interactive voice exercises
+- 📱 Clean and simple user interface
+
+## 🛠️ Technologies Used
+
+- Flutter (Dart)
+- Platform Channels (Flutter ↔ Native communication)
+- Native audio processing (Android - Kotlin)
+- **TarsosDSP** `2.5` (pitch detection engine)
+
+
+## ⚙️ How It Works
+
+1. The user starts a voice exercise from the UI.
+2. Flutter communicates with the native Android layer using MethodChannel.
+3. The native side records audio using `AudioRecord`.
+4. The recorded audio is analyzed to detect pitch.
+5. Results are sent back to Flutter and displayed to the user.
+
+## 🚧 What I Learned
+
+- Basics of Flutter app development
+- Working with platform-specific code (Flutter & Kotlin integration)
+- Handling real-time audio data
+- Structuring a mobile application
+
+
+
+## ▶️ Getting Started
+
+To run this project locally:
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+flutter pub get
+flutter run
